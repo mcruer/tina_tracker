@@ -1,0 +1,19 @@
+Things to create:
+
+Script for reading files/compiling data
+Script for error checking and adding comments on files
+Eventually: Script for repopulating the projects to add/remove items
+
+Things to do:
+Protect Sheets
+
+Move site plan approval into a different section
+Change site ownership status to Site Status: Planning, Optioned, Purchased
+Funding source: EDC or LP
+Consider removing Site purchase date
+Get approved funding from project tracker
+Combine Projected Cost into one column
+
+
+Also:
+Need a system for dealing with projects that analyst flag as "Cancled"
