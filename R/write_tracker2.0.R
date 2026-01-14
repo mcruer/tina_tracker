@@ -1,4 +1,3 @@
-source("r/libraries.R")
 
 #NOTES
 #Still need a process for the error explained columns
@@ -6,19 +5,30 @@ source("r/libraries.R")
 #IMPORTANT!!! Still need to make sure that blank meeting minutes don't trigger overwirte
 #of previously uploaded data!!!
 
+#Load Libraries & Helpers----
+source("r/libraries.R")
+source("r/helpers.R")
 
+#Load Data -----
 pt <- pt()
-
 monthly <- ezql_table("monthly")
 monthly_all <- ezql_table("monthly_all")
+frank <- frank()
 
-add_na_column <- function(df, column_name) {
-  df %>%
-    mutate(!!rlang::sym(column_name) := NA_character_)
-}
+boards_by_project_id <- pt %>%
+  select(project_id, board_number)
+
+board_names <- ezql_table("boards") %>%
+  select(board_number, board_name)
+
+pc <- ezql_table("commitments") %>%
+  left_join(pt %>% select(project_id, board_number, project_name)) %>%
+  nest(pc = -board_number)
 
 
-#Pull the Included Project IDs
+
+
+#Pull the Included Project IDs----
 
 #This pulls any of the projects that were on the tracker last time, 
 #(record_status == "In Progress") plus any new projects that weren't 
@@ -32,42 +42,9 @@ included_ids <- frank %>%
     record_status == "In Progress" |
       is.na(record_status) & is.na(construction_status)
   ) %>%
-  select(project_id) %>%
-  filter_out(project_id, "38-037")
+  select(project_id)
 
 
-boards_by_project_id <- pt %>%
-  select(project_id, board_number)
-
-board_names <- ezql_table("boards") %>%
-  select(board_number, board_name)
-
-
-#Load PC Data ------
-
-pc <- ezql_table("commitments") %>%
-  left_join(pt %>% select(project_id, board_number, project_name)) %>%
-  nest(pc = -board_number)
-
-
-monthly_names <- monthly %>% names()
-
-pc_names <- pc %>% unnest(pc) %>% names
-
-merge_to_monthly_if_na <- frank %>%
-  select(project_id) %>%
-  left_join(pc %>%
-              unnest(pc)) %>%
-  select(all_of (intersect(pc_names, monthly_names)))  %>%
-  select(project_id, starts_with("date")) %>%
-  nest(use_if_na = -project_id)
-
-
-#I think we don't need this! I believe this was for the initial load only.
-to_merge_into_monthly <- pc %>%
-  unnest(pc) %>%
-  select(project_id, all_of(setdiff(pc_names, monthly_names))) %>%
-  select(-board_number)
 
 #Wrangle Comments -----
 
@@ -140,9 +117,28 @@ funding_table <- pt %>%
   pivot_wider(names_from = "type", values_from = "funding_total") %>%
   ungroup()
 
+#Create data to use if monthly dates are missing ----
+
+#We use the dates in the project commitment if they are absent in the monthly
+#tracker. This pulls in all the data to possibly be merged later.
+
+monthly_names <- monthly %>% names()
+pc_names <- pc %>% unnest(pc) %>% names
+
+merge_to_monthly_if_na <- frank %>%
+  select(project_id) %>%
+  left_join(pc %>%
+              unnest(pc)) %>%
+  select(all_of (intersect(pc_names, monthly_names)))  %>%
+  select(project_id, starts_with("date")) %>%
+  nest(use_if_na = -project_id)
+
+
 merge_target_names <- merge_to_monthly_if_na %>% 
   pull_cell(use_if_na) %>%
   names()
+
+#Build monthly_out_interim ----
 
 monthly_out_interim <- included_ids %>%
   left_join (monthly) %>%
