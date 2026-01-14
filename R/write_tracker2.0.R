@@ -243,6 +243,8 @@ remainder <- included_ids %>%
 pc_process <- bind_rows(from_events, grandfathered) %>%
   bind_rows(remainder) %>%
   semi_join(included_ids, by = "project_id") %>%
+  
+  #BAD - this doesn't do anything!
   mutate(pretender_package_type) %>%
   view()
 
