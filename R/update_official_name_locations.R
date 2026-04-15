@@ -81,11 +81,9 @@ add_calculated_columns <- function(df, event_date) {
 
 #I still need to find something to do with the sign_installed column
 
-basic_info <- df_raw %>%
-  select(monthly) %>%
-  nested_mutate(monthly, temp_site_purchase_formula, as.character) %>%
-  unnest(monthly) %>%
+basic_info <- df %>%
   select(board_number_name, basic_project_info) %>%
+  nested_mutate(basic_project_info, c(sign_installed, project_name_official), as.character) %>%
   nested_mutate(basic_project_info, starts_with("date"), as.character) %>%
   nested_mutate(basic_project_info, starts_with("date"), 
                 ~str_replace(.x, "Jan. 12 2025", "2025-01-12")) %>%
@@ -110,12 +108,12 @@ revised_location <- basic_info %>%
   left_join(pt %>%
               select(project_id, all_of(location_names)) %>%
               nest(original = -project_id)) %>%
-  select(project_id, new, original) %>%
+  select(project_id, new, original) %>% 
   mutate(
     check = map2(new, original, df_map, identical)
   ) %>%
   unnest(check) %>%
-  filter(if_any(starts_with("location_"), ~ .x == FALSE)) %>%
+  filter(if_any(c(starts_with("location_"), project_name_official), ~ .x == FALSE)) %>%
   select(project_id, new) %>%
   unnest(new) %>%
   mutate(event_type = "Location or Official Name Update") %>%

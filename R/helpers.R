@@ -36,3 +36,34 @@ add_na_column <- function(df, column_name) {
     mutate(!!rlang::sym(column_name) := NA_character_)
 }
 
+
+make_na_row <- function(tbl) {
+  tbl %>%
+    slice(1) %>%
+    mutate(across(everything(), ~ NA))
+}
+
+fix_null_listcols <- function(data, ...) {
+  cols <- enquos(...)
+  
+  reduce(
+    cols,
+    .init = data,
+    .f = function(df, colq) {
+      col <- quo_name(colq)
+      
+      # find template
+      template <- df[[col]] |>
+        discard(is.null) |>
+        pluck(1)
+      
+      na_template <- make_na_row(template)
+      
+      df %>%
+        mutate({{ colq }} := map({{ colq }}, ~ if (is.null(.x))
+          na_template
+          else
+            .x))
+    }
+  )
+}

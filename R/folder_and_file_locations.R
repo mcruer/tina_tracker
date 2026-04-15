@@ -1,0 +1,5 @@
+metadata_path <- "data/metadata_template_2026-03-26 Production.xlsx"
+#metadata_path <- "data/metadata_template_2026-01-15 Production.xlsx"
+output_path <- "output/"
+output_path <- "B:/^TINA Package Tracker/"
+current_folder_path <- "B:/^TINA Package Tracker/"
