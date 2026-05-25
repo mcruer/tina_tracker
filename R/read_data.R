@@ -34,7 +34,7 @@ pt <- pt()
 # Compare current folder contents against the previous snapshot to identify
 # which files have been modified. Only modified files get archived.
 
-new_archive_folder <- str_c(current_folder_path, "Archive/", today())
+new_archive_folder <- str_c(current_folder_path, "Archive/", format(Sys.time(), "%Y-%m-%d %H-%M-%S"))
 dir_create(new_archive_folder)
 
 expected_project_tracker_files <- databased::load_data("expected_project_tracker_files")
