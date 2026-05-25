@@ -204,7 +204,6 @@ upload <- df %>%
 # and forward-fill record_status.
 
 
-
 upload %>%
   filter_out_na(date_meeting) %>%
   select(any_of(names(monthly_all))) %>%
@@ -217,7 +216,16 @@ upload %>%
   slice_tail(n = 1) %>%
   group_by(project_id) %>%
   add_index(col_name = "event_number") %>%
-  fill(record_status, .direction = "down") %>%
+  fill(c(record_status,
+         #The ones below could arguably be removed after I'm able to read and
+         #write these at the same time.
+         pretender_package_type,
+         pre_tender_complete,
+         pre_tender_documents_reviewed,
+         posttender_package_type,
+         post_tender_complete,
+         post_tender_documents_reviewed,
+         ), .direction = "down") %>%
   ungroup() %>%
   mutate(event_id = str_c(project_id, "|", event_number)) %>%
   relocate(event_id) %>%

@@ -9,3 +9,4 @@ output/
 *.RData
 .RDataTmp
 .Rproj.user/
+.positai

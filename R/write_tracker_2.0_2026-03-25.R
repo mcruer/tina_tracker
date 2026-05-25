@@ -184,23 +184,25 @@ upload_alt <- upload <- df %>%
   mutate(date_meeting = coalesce(date_meeting, last_date_meeting)) %>%
   select(-last_date_meeting, -board_number)
 
-pc_process <- included_ids %>%
-  left_join(generate_approval_status(events, included_ids)) %>%
-  left_join(upload_alt %>% select(-post_tender_complete, -pre_tender_complete)) %>%
-  select(project_id, 
-         pre_tender_complete,
-         pretender_package_type, 
-         pre_tender_documents_reviewed, 
-         post_tender_complete,
-         posttender_package_type,
-         post_tender_documents_reviewed, 
-  )
+approval_statuses <- generate_approval_status(events, included_ids)
 
-databased::database_it(pc_process)
+# pc_process <- generate_approval_status(events, included_ids) %>%
+#   left_join(upload_alt %>% select(-post_tender_complete, -pre_tender_complete)) %>%
+#   select(project_id, 
+#          pre_tender_complete,
+#          pretender_package_type, 
+#          pre_tender_documents_reviewed, 
+#          post_tender_complete,
+#          posttender_package_type,
+#          post_tender_documents_reviewed, 
+#   )
+
+databased::database_it(approval_statuses)
+
 
 monthly_out_interim <- included_ids %>%
   left_join (monthly) %>%
-  select(-project_name) %>%
+  select(-project_name, -ends_with("tender_complete")) %>%
   left_join(
     pt %>%
       select(
@@ -241,7 +243,7 @@ monthly_out_interim <- included_ids %>%
   left_join(upload_alt %>%
               select(project_id, starts_with("error_explained"))
   ) %>%
-  left_join(pc_process)
+  left_join(approval_statuses)
 
 add_na_column <- function(data, col_name) {
   data %>% mutate("{col_name}" := NA)
